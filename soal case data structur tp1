@@ -1,0 +1,180 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struktur untuk node dalam singly linked list
+struct Employee {
+    int employeeID;
+    char name[31];
+    char birthPlace[31];
+    char birthDate[11];
+    char position[51];
+    struct Employee* next;
+};
+
+// Fungsi untuk membuat node baru
+struct Employee* createEmployee(int employeeID, char* name, char* birthPlace, char* birthDate, char* position) {
+    struct Employee* newEmployee = (struct Employee*)malloc(sizeof(struct Employee));
+    newEmployee->employeeID = employeeID;
+    strcpy(newEmployee->name, name);
+    strcpy(newEmployee->birthPlace, birthPlace);
+    strcpy(newEmployee->birthDate, birthDate);
+    strcpy(newEmployee->position, position);
+    newEmployee->next = NULL;
+    return newEmployee;
+}
+
+// Fungsi untuk menambahkan node ke linked list secara terurut berdasarkan Employee ID
+void pushEmployee(struct Employee** head, int employeeID, char* name, char* birthPlace, char* birthDate, char* position) {
+    struct Employee* newEmployee = createEmployee(employeeID, name, birthPlace, birthDate, position);
+
+    if (*head == NULL || (*head)->employeeID >= newEmployee->employeeID) {
+        newEmployee->next = *head;
+        *head = newEmployee;
+    } else {
+        struct Employee* current = *head;
+        while (current->next != NULL && current->next->employeeID < newEmployee->employeeID) {
+            current = current->next;
+        }
+        newEmployee->next = current->next;
+        current->next = newEmployee;
+    }
+}
+
+// Fungsi untuk menampilkan semua karyawan
+void displayEmployees(struct Employee* head) {
+    struct Employee* current = head;
+    if (current == NULL) {
+        printf("Database karyawan kosong.\n");
+        return;
+    }
+    while (current != NULL) {
+        printf("Employee ID: %d\n", current->employeeID);
+        printf("Nama: %s\n", current->name);
+        printf("Tempat Lahir: %s\n", current->birthPlace);
+        printf("Tanggal Lahir: %s\n", current->birthDate);
+        printf("Jabatan: %s\n\n", current->position);
+        current = current->next;
+    }
+}
+
+// Fungsi untuk menghapus karyawan berdasarkan Employee ID
+void deleteEmployee(struct Employee** head, int employeeID) {
+    struct Employee* temp = *head;
+    struct Employee* prev = NULL;
+
+    if (temp != NULL && temp->employeeID == employeeID) {
+        *head = temp->next;
+        free(temp);
+        return;
+    }
+
+    while (temp != NULL && temp->employeeID != employeeID) {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    if (temp == NULL) {
+        printf("Karyawan dengan Employee ID %d tidak ditemukan.\n", employeeID);
+        return;
+    }
+
+    prev->next = temp->next;
+    free(temp);
+}
+
+// Fungsi untuk menghapus semua karyawan
+void deleteAllEmployees(struct Employee** head) {
+    struct Employee* current = *head;
+    struct Employee* next;
+
+    while (current != NULL) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+
+    *head = NULL;
+}
+
+// Fungsi untuk memvalidasi input
+int isValidInput(int employeeID, char* name, char* birthPlace, char* birthDate, char* position) {
+    if (employeeID < 0 || employeeID > 99999) return 0;
+    if (strlen(name) > 30 || strlen(birthPlace) > 30 || strlen(position) > 50) return 0;
+    return 1;
+}
+
+int main() {
+    struct Employee* head = NULL;
+    int choice, employeeID;
+    char name[31], birthPlace[31], birthDate[11], position[51];
+    int count = 0;
+
+    do {
+        printf("\nMenu:\n");
+        printf("1. Push data karyawan\n");
+        printf("2. Tampilkan semua daftar karyawan\n");
+        printf("3. Hapus data karyawan berdasarkan Employee ID\n");
+        printf("4. Hapus semua data karyawan\n");
+        printf("5. Keluar dari program\n");
+        printf("Pilih opsi: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                if (count >= 5) {
+                    printf("Jumlah maksimal data karyawan adalah 5.\n");
+                    break;
+                }
+                printf("Masukkan Employee ID (max 5 angka): ");
+                scanf("%d", &employeeID);
+                getchar(); // Mengonsumsi newline character
+                printf("Masukkan Nama Lengkap (max 30 karakter): ");
+                fgets(name, 31, stdin);
+                name[strcspn(name, "\n")] = '\0'; // Menghilangkan newline di akhir input
+                printf("Masukkan Tempat Lahir (max 30 karakter): ");
+                fgets(birthPlace, 31, stdin);
+                birthPlace[strcspn(birthPlace, "\n")] = '\0'; // Menghilangkan newline di akhir input
+                printf("Masukkan Tanggal Lahir (format DD-MM-YYYY): ");
+                fgets(birthDate, 11, stdin);
+                birthDate[strcspn(birthDate, "\n")] = '\0'; // Menghilangkan newline di akhir input
+                printf("Masukkan Jabatan (max 50 karakter): ");
+                fgets(position, 51, stdin);
+                position[strcspn(position, "\n")] = '\0'; // Menghilangkan newline di akhir input
+
+                if (isValidInput(employeeID, name, birthPlace, birthDate, position)) {
+                    pushEmployee(&head, employeeID, name, birthPlace, birthDate, position);
+                    count++;
+                } else {
+                    printf("Input tidak valid. Pastikan semua data sesuai batasan.\n");
+                }
+                break;
+
+            case 2:
+                displayEmployees(head);
+                break;
+
+            case 3:
+                printf("Masukkan Employee ID yang ingin dihapus: ");
+                scanf("%d", &employeeID);
+                deleteEmployee(&head, employeeID);
+                count--;
+                break;
+
+            case 4:
+                deleteAllEmployees(&head);
+                count = 0;
+                break;
+
+            case 5:
+                printf("Keluar dari program.\n");
+                deleteAllEmployees(&head);
+                break;
+
+            default:
+                printf("Pilihan tidak valid.\n");
+        }
+    } while (choice != 5);
+
+    return 0;
+}
